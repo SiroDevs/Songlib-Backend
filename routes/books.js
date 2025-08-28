@@ -11,9 +11,9 @@ const Book = require('../models/book');
  */
 router.get('/', async (req, res, next) => {
   try {
-    //Book.find({}).then((data) => res.json(data)).catch(next);
-    const books = await Book.find({}).select('-_id').sort('bookNo');
-    res.json({ count: books.length, data: books });
+    await Book.find({}).select('-_id').sort('bookNo')
+    .then((data) => res.json(data))
+    .catch(next);
   } catch (error) {
     console.error(error);
     return res.status(500).send("Server error");
@@ -28,10 +28,10 @@ router.get('/', async (req, res, next) => {
 router.get('/:bookId', (req, res, next) => {
   try {
     Book.findOne({ bookId: req.params.bookId })
-      .then((book) => {
-        if (!book)
+      .then((data) => {
+        if (!data)
           return res.status(404).json({ message: 'Book not found' });
-        else res.status(200).json(book);
+        else res.status(200).json(data);
       })
       .catch(next);
   } catch (error) {

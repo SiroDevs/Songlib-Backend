@@ -1,6 +1,6 @@
 {
   "name": "songlib-backend",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "the back end for songlib",
   "main": "index.js",
   "scripts": {
@@ -15,6 +15,10 @@
     "express": "^4.17.1",
     "mongoose": "^7.1.0",
     "nanoid": "^4.0.2",
-    "nodemon": "^2.0.22"
+    "nodemon": "^2.0.22",
+    "swagger-ui-express": "^4.6.2"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }

@@ -9,35 +9,26 @@ const Song = require('../models/song');
  *
  * @return song list | empty.
  */
-router.get('/', async (res, next) => {
+router.get('/', async (req, res, next) => {
   try {
-    await Song.find({}).select('-_id').sort('songId')
-      .then((songs) => res.json({ count: songs.length, data: songs }))
-      .catch(next);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send("Server error");
-  }
-});
+    const booksParam = req.query.books;
+    let query = {};
 
-/**
- * GET songs matching a book numbers.
- *
- * @return song details | empty.
- */
-router.get('/book/:ids', async (req, res, next) => {
-  try {
-    const ids = req.params.ids.split(',');
-    Song.find({ book: { $in: ids } }).select('-_id').sort('songId')
-      .then((songs) => {
-        if (songs.length === 0)
-          return res.status(404).json({ message: 'No songs found for the specified books' });
-        else res.status(200).json({ count: songs.length, data: songs });
-      })
-      .catch(next);
+    if (booksParam) {
+      const ids = booksParam.split(',');
+      query.book = { $in: ids };
+    }
+
+    const data = await Song.find(query).select('-_id').sort('songId');
+
+    if (booksParam && data.length === 0) {
+      return res.status(404).json({ message: 'No songs found for the specified books' });
+    }
+
+    res.status(200).json(data);
   } catch (error) {
     console.error(error);
-    return res.status(500).send('Server error');
+    next(error);
   }
 });
 

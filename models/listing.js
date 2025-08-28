@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const modelSchema = new mongoose.Schema({
-    listedId: { type: Number, unique: true },
+    listingId: { type: Number, unique: true },
     song: { type: Number, required: true },
     title: { type: String, required: false },
     description: { type: String, required: false },
@@ -10,4 +10,4 @@ const modelSchema = new mongoose.Schema({
     updated: { type: Date }
 });
 
-module.exports = mongoose.model('Listed', modelSchema);;
+module.exports = mongoose.model('Listing', modelSchema);;

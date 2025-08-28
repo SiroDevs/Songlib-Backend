@@ -2,16 +2,16 @@ const express = require("express");
 const router = express.Router();
 
 const Acounter = require('../models/acounter');
-const Listed = require('../models/listed');
+const Listing = require('../models/listing');
 
 /**
- * GET listed list.
+ * GET listing list.
  *
- * @return listed list | empty.
+ * @return listing list | empty.
  */
 router.get('/', (req, res, next) => {
   try {
-    Listed.find({}).then((data) => res.json(data)).catch(next);
+    Listing.find({}).then((data) => res.json(data)).catch(next);
   } catch (error) {
     console.error(error);
     return res.status(500).send("Server error");
@@ -19,17 +19,17 @@ router.get('/', (req, res, next) => {
 });
 
 /**
- * GET single listed.
+ * GET single listing.
  *
- * @return listed details | empty.
+ * @return listing details | empty.
  */
-router.get('/:listedid', (req, res, next) => {
+router.get('/:listingid', (req, res, next) => {
   try {
-    Listed.findOne({ listedid: req.params.listedid })
-      .then((listed) => {
-        if (!listed)
+    Listing.findOne({ listingid: req.params.listingid })
+      .then((listing) => {
+        if (!listing)
           return res.status(404).json({ message: 'List not found' });
-        else res.status(200).json(listed);
+        else res.status(200).json(listing);
       })
       .catch(next);
   } catch (error) {
@@ -39,19 +39,19 @@ router.get('/:listedid', (req, res, next) => {
 });
 
 /**
- * POST new listed.
+ * POST new listing.
  *
- * @return listed details | empty.
+ * @return listing details | empty.
  */
 router.post('/', (req, res, next) => {
   if (req.body.title) {
-    Acounter.findOne({ _id: 'listeds' })
+    Acounter.findOne({ _id: 'listings' })
       .then((counter) => {
-        req.body.listedid = counter.seq + 1;
+        req.body.listingid = counter.seq + 1;
 
-        Listed.create(req.body)
+        Listing.create(req.body)
           .then((data) => {
-            Acounter.findOneAndUpdate({ _id: 'listeds' }, { $inc: { seq: 1 } }, { new: true }).then();
+            Acounter.findOneAndUpdate({ _id: 'listings' }, { $inc: { seq: 1 } }, { new: true }).then();
             res.json(data);
           })
           .catch((error) => {
@@ -74,18 +74,18 @@ router.post('/', (req, res, next) => {
 });
 
 /**
- * POST edit listed.
+ * POST edit listing.
  *
- * @return listed details | empty.
+ * @return listing details | empty.
  */
-router.put('/:listedid', (req, res, next) => {
+router.put('/:listingid', (req, res, next) => {
   try {
     const update = req.body;
-    Listed.findOneAndUpdate({ _id: req.params.listedid }, update, { new: true })
+    Listing.findOneAndUpdate({ _id: req.params.listingid }, update, { new: true })
       .then((data) => res.json({
         status: 200,
         data: data,
-        message: 'Listed updated successfully',
+        message: 'Listing updated successfully',
       }))
       .catch(next);
   } catch (error) {
@@ -95,15 +95,15 @@ router.put('/:listedid', (req, res, next) => {
 });
 
 /**
- * DELETE a listed.
+ * DELETE a listing.
  *
  * @return delete result | empty.
  */
-router.delete('/:listedid', (req, res, next) => {
+router.delete('/:listingid', (req, res, next) => {
   try {
-    Listed.deleteOne({ listedid: req.params.listedid })
-      .then((listed) => {
-        if (!listed)
+    Listing.deleteOne({ listingid: req.params.listingid })
+      .then((listing) => {
+        if (!listing)
           return res.status(404).json({ message: 'List not found' });
         else
           return res.status(200).json({ message: 'List deleted successfully' });

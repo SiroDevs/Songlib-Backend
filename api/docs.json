@@ -558,53 +558,53 @@
                 }
             }
         },
-        "/listed": {
+        "/listing": {
             "get": {
-                "tags": [ "Listed" ],
-                "summary": "Get Listed List",
+                "tags": [ "Listing" ],
+                "summary": "Get Listing List",
                 "responses": {
                     "200": {
-                        "description": "A list of listeds",
+                        "description": "A list of listings",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/Listed"
+                                "$ref": "#/definitions/Listing"
                             }
                         }
                     }
                 }
             },
             "post": {
-                "tags": [ "Listed" ],
+                "tags": [ "Listing" ],
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "summary": "Save a Listed",
+                "summary": "Save a Listing",
                 "parameters": [
                     {
                         "in": "body",
-                        "name": "listed",
+                        "name": "listing",
                         "schema": {
-                            "$ref": "#/definitions/Listed"
+                            "$ref": "#/definitions/Listing"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Listed created"
+                        "description": "Listing created"
                     }
                 }
             }
         },
-        "/listed/{listedId}": {
+        "/listing/{listingId}": {
             "get": {
-                "tags": [ "Listed" ],
-                "summary": "Get a Listed by ID",
+                "tags": [ "Listing" ],
+                "summary": "Get a Listing by ID",
                 "parameters": [
                     {
-                        "name": "listedId",
+                        "name": "listingId",
                         "in": "path",
                         "required": true,
                         "type": "integer"
@@ -612,27 +612,27 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Listed details",
+                        "description": "Listing details",
                         "schema": {
-                            "$ref": "#/definitions/Listed"
+                            "$ref": "#/definitions/Listing"
                         }
                     },
                     "404": {
-                        "description": "Listed not found"
+                        "description": "Listing not found"
                     }
                 }
             },
             "delete": {
-                "tags": [ "Listed" ],
+                "tags": [ "Listing" ],
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "summary": "Delete a Listed",
+                "summary": "Delete a Listing",
                 "parameters": [
                     {
-                        "name": "listedId",
+                        "name": "listingId",
                         "in": "path",
                         "required": true,
                         "type": "integer"
@@ -640,14 +640,14 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "Listed deleted"
+                        "description": "Listing deleted"
                     }
                 }
             },
-            "/listed/{bookIds}": {
+            "/listing/{bookIds}": {
                 "get": {
-                    "tags": [ "Listed" ],
-                    "summary": "Get Listed List by Book ID(s)",
+                    "tags": [ "Listing" ],
+                    "summary": "Get Listing List by Book ID(s)",
                     "parameters": [
                         {
                             "name": "bookIds",
@@ -660,7 +660,7 @@
                     ],
                     "responses": {
                         "200": {
-                            "description": "A list of listeds by book ID(s)",
+                            "description": "A list of listings by book ID(s)",
                             "content": {
                                 "application/json": {
                                     "schema": {
@@ -1032,24 +1032,24 @@
                 }
             }
         },
-        "Listed": {
+        "Listing": {
             "type": "object",
             "properties": {
-                "listedId": {
+                "listingId": {
                     "type": "integer",
-                    "description": "Unique ID of the listed"
+                    "description": "Unique ID of the listing"
                 },
                 "title": {
                     "type": "string",
-                    "description": "Title of the listed"
+                    "description": "Title of the listing"
                 },
                 "content": {
                     "type": "string",
-                    "description": "Content of the listed"
+                    "description": "Content of the listing"
                 },
                 "author": {
                     "type": "string",
-                    "description": "Author of the listed"
+                    "description": "Author of the listing"
                 },
                 "created": {
                     "type": "string",
@@ -1066,7 +1066,7 @@
         "Org": {
             "type": "object",
             "properties": {
-                "listedId": {
+                "listingId": {
                     "type": "integer",
                     "description": "Unique ID of the organisation"
                 },

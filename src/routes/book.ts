@@ -1,7 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 
-import Acounter from "./models/acounter";
-import Book from "./models/book";
+import { Acounter, Book } from "../models";
 
 const router = Router();
 

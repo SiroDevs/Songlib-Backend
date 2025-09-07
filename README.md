@@ -11,6 +11,8 @@ SongLibBe/
 ├── api/                 # API-related logic and handlers
 ├── models/              # Database models for songs, users, etc.
 ├── routes/              # Route definitions for API endpoints
+├── services/            # Services for rputes
+├── utils/               # Api Utilities and helpers
 ├── index.js             # Main entry point for the server
 ├── package.json         # Project dependencies and scripts
 ├── .env.example         # Example environment variables file
@@ -22,6 +24,8 @@ SongLibBe/
 - **`api/`**: Contains the core logic for interacting with songs and handling API requests.
 - **`models/`**: Defines the database schema for the entities used in SongLib (e.g., songs, users).
 - **`routes/`**: Defines the endpoints for interacting with the API, including song CRUD operations.
+- **`services/`**: Defines the services for managing the routes.
+- **`utils/`**: Defines the helpers and utils.
 - **`index.js`**: The main file that initializes the server and connects the routes and database.
 - **`vercel.json`**: Contains the configuration for deploying the backend to Vercel.
 

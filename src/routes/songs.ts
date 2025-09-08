@@ -1,130 +1,163 @@
 import { Router, Request, Response, NextFunction } from "express";
-import mongoose from "mongoose";
-
-import { Acounter, Song } from "../models";
+import { SongService } from "../services/songService";
+import { ResponseUtils } from "../utils/responseUtils";
+import { ValidationUtils } from "../utils/validationUtils";
 
 const router = Router();
-const { ObjectId } = mongoose.Types;
 
 /**
- * GET song list.
- *
- * @return song list | empty.
+ * GET single song by ID
  */
-router.get("/", async (req: Request, res: Response, next: NextFunction) => {
+router.get("/:songId", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await Song.find({});
-    res.json(data);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Server error");
-    next(error);
-  }
-});
-
-/**
- * GET single song.
- *
- * @return song details | empty.
- */
-router.get("/:songid", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const song = await Song.findOne({ songid: req.params.songid });
+    const songId = parseInt(req.params.songId);
+    const song = await SongService.getSongById(songId);
     if (!song) {
-      return res.status(404).json({ message: "Song not found" });
+      return ResponseUtils.notFound(res, "Song not found");
     }
-    res.status(200).json(song);
+    ResponseUtils.success(res, song);
   } catch (error) {
+    ResponseUtils.error(res, "Server error");
     console.error(error);
-    res.status(500).send("Server error");
     next(error);
   }
 });
 
 /**
- * POST new song.
- *
- * @return song details | error.
+ * GET songs by book ID(s)
+ */
+router.get("/book/:bookIds", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const bookIds = ValidationUtils.parseBookIds(req.params.bookIds);
+    if (bookIds.length === 0) {
+      return ResponseUtils.badRequest(res, "Invalid book IDs");
+    }
+
+    const songs = await SongService.getSongsByBookIds(bookIds);
+    if (songs.length === 0) {
+      return ResponseUtils.notFound(res, "No songs found for the specified books");
+    }
+    ResponseUtils.success(res, { data: songs });
+  } catch (error) {
+    ResponseUtils.error(res, "Server error");
+    console.error(error);
+    next(error);
+  }
+});
+
+/**
+ * POST new song(s)
  */
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.body.title) {
-      return res.status(400).json({
-        error: "An input field is either empty or invalid",
-      });
-    }
+    if (ValidationUtils.isBulkOperation(req.body)) {
+      const { createdSongs, errors } = await SongService.createMultipleSongs(req.body);
 
-    const counter = await Acounter.findOne({ _id: "orgs" });
-    if (!counter) {
-      return res.status(500).json({ error: "Counter not found" });
-    }
-
-    req.body.songid = counter.seq + 1;
-
-    const newOrg = await Song.create(req.body);
-
-    await Acounter.findOneAndUpdate(
-      { _id: "orgs" },
-      { $inc: { seq: 1 } },
-      { new: true }
-    );
-
-    res.json(newOrg);
-  } catch (error: any) {
-    if (error.code === 11000) {
-      res.status(409).json({ error: "Duplicate record found" });
+      return ResponseUtils.bulkOperationResult(
+        res,
+        "Creation",
+        createdSongs,
+        errors,
+        201
+      );
     } else {
-      res.status(500).json({ error: "Internal server error" });
+      const validationError = ValidationUtils.validateSongData(req.body);
+      if (validationError) {
+        return ResponseUtils.badRequest(res, validationError);
+      }
+      const song = await SongService.createSingleSong(req.body);
+      ResponseUtils.success(res, song, 201);
     }
+  } catch (error: any) {
+    ResponseUtils.recordsError(res, error.code);
+    console.error(error);
     next(error);
   }
 });
 
 /**
- * UPDATE song.
- *
- * @return updated song | error.
+ * PUT update single song
  */
-router.put("/:songid", async (req: Request, res: Response, next: NextFunction) => {
+router.put("/:songId", async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const songId = parseInt(req.params.songId);
     if (!req.body.title) {
-      return res.status(400).json({
-        error: "An input field is either empty or invalid",
-      });
+      return ResponseUtils.badRequest(res, "Title is required");
     }
-
-    const updated = await Song.updateOne(
-      { _id: new ObjectId(req.params.songid) },
-      req.body
-    );
-
-    if (updated.modifiedCount === 0) {
-      return res.status(404).json({ message: "Song not found" });
+    const song = await SongService.updateSong(songId, req.body);
+    if (!song) {
+      return ResponseUtils.notFound(res, "Song not found");
     }
-
-    res.json({ message: "Song updated successfully" });
-  } catch (error) {
+    ResponseUtils.success(res, song);
+  } catch (error: any) {
+    ResponseUtils.recordsError(res, error.code);
     console.error(error);
-    res.status(500).send("Server error");
     next(error);
   }
 });
 
 /**
- * DELETE a song.
- *
- * @return delete result | error.
+ * PUT bulk update song IDs
  */
-router.delete("/:songid", async (req: Request, res: Response, next: NextFunction) => {
+router.put("/bulk/:value", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await Song.deleteOne({ songid: req.params.songid });
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "Song not found" });
+    const valueToAdd = parseInt(req.params.value);
+    const { book } = req.body;
+    if (!book) {
+      return ResponseUtils.badRequest(res, "Book is required");
     }
-    res.status(200).json({ message: "Song deleted successfully" });
+    const result = await SongService.bulkUpdateSongIds(book, valueToAdd);
+
+    if (result.updatedCount === 0) {
+      return ResponseUtils.notFound(res, "No songs found for the specified book");
+    }
+
+    ResponseUtils.success(res, {
+      message: `${result.updatedCount} songs updated successfully`,
+    });
   } catch (error) {
+    ResponseUtils.error(res, "Server error");
     console.error(error);
-    res.status(500).send("Server error");
+    next(error);
+  }
+});
+
+/**
+ * DELETE single song
+ */
+router.delete("/:songId", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const songId = parseInt(req.params.songId);
+    const result = await SongService.deleteSong(songId);
+    if (result.deletedCount === 0) {
+      return ResponseUtils.notFound(res, "Song not found");
+    }
+    ResponseUtils.success(res, {
+      message: "Song deleted successfully",
+    });
+  } catch (error) {
+    ResponseUtils.error(res, "Server error");
+    console.error(error);
+    next(error);
+  }
+});
+
+/**
+ * DELETE all songs from a book
+ */
+router.delete("/bulk/:book", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { book } = req.params;
+    const deletedCount = await SongService.deleteSongsByBook(book);
+    if (deletedCount === 0) {
+      return ResponseUtils.notFound(res, "No songs found for the specified book");
+    }
+    ResponseUtils.success(res, {
+      message: `${deletedCount} songs deleted successfully`,
+    });
+  } catch (error) {
+    ResponseUtils.error(res, "Server error");
+    console.error(error);
     next(error);
   }
 });

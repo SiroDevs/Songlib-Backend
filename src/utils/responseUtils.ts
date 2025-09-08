@@ -24,6 +24,14 @@ export class ResponseUtils {
     return res.status(409).json({ error: message });
   }
 
+  static recordsError(res: Response, error: any) {
+    if (error.code === 11000) {
+      this.conflict(res, "Duplicate record found");
+    } else {
+      this.error(res, "Internal server error");
+    }
+  }
+
   static bulkOperationResult(
     res: Response,
     operation: string,

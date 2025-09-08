@@ -1,24 +1,17 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { Acounter, Book } from "../models";
+import { BookService } from "../services/bookService";
+import { ResponseUtils } from "../utils/responseUtils";
+import { ValidationUtils } from "../utils/validationUtils";
 
 const router = Router();
 
-/**
- * GET book list
- * @return book list with count or just list
- */
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const books = await Book.find({}).select("-_id").sort("bookNo");
-    
-    // Return consistent format - always include count for consistency
-    res.json({ 
-      count: books.length, 
-      data: books 
-    });
+    const books = await BookService.getAllBooks();
+    ResponseUtils.success(res, { data: books });
   } catch (error) {
+    ResponseUtils.error(res, "Server error");
     console.error(error);
-    res.status(500).json({ error: "Server error" });
     next(error);
   }
 });
@@ -28,276 +21,103 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
  */
 router.get("/:ids", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { ids } = req.params;
-    
-    // Handle multiple IDs separated by commas
-    if (ids.includes(',')) {
-      const bookIds = ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-      
-      if (bookIds.length === 0) {
-        return res.status(400).json({ error: "Invalid book IDs" });
-      }
-      
-      const books = await Book.find({ bookId: { $in: bookIds } });
-      return res.json({
-        count: books.length,
-        data: books
-      });
-    }
-    
-    // Handle single ID
-    const bookId = parseInt(ids);
-    if (isNaN(bookId)) {
-      return res.status(400).json({ error: "Invalid book ID" });
-    }
-    
-    const book = await Book.findOne({ bookId });
-    if (!book) {
-      return res.status(404).json({ message: "Book not found" });
-    }
-    
-    res.status(200).json(book);
+    const bookIds = req.params.ids.split(",");
+    const books = await BookService.getBooksByIds(bookIds);
+    return ResponseUtils.success(res, { data: books });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Server error" });
+    const books = await BookService.getAllBooks();
+    ResponseUtils.success(res, { data: books });
     next(error);
   }
 });
 
 /**
- * POST new book(s) - handles both single and bulk creation
+ * POST new book(s)
  */
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (Array.isArray(req.body)) {
-      // Bulk creation
-      const createdBooks = [];
-      const errors = [];
-      
-      for (const [index, item] of req.body.entries()) {
-        try {
-          if (!item.title) {
-            errors.push({ index, error: "Title is required" });
-            continue;
-          }
+    if (ValidationUtils.isBulkOperation(req.body)) {
+      const { createdBooks, errors } = await BookService.createMultipleBooks(req.body);
 
-          const counter = await Acounter.findOne({ _id: "books" });
-          if (!counter) throw new Error("Counter not found");
-
-          item.bookId = counter.seq + 1;
-          
-          const newBook = await Book.create(item);
-          createdBooks.push(newBook);
-          
-          await Acounter.findOneAndUpdate(
-            { _id: "books" },
-            { $inc: { seq: 1 } },
-            { new: true }
-          );
-        } catch (error: any) {
-          errors.push({ 
-            index, 
-            error: error.code === 11000 ? "Duplicate record" : "Creation failed",
-            details: error.message
-          });
-        }
-      }
-
-      return res.status(201).json({
-        message: "Bulk creation completed",
-        created: createdBooks.length,
-        failed: errors.length,
-        data: createdBooks,
-        errors: errors.length > 0 ? errors : undefined
-      });
-    } else {
-      // Single creation
-      if (!req.body.title) {
-        return res.status(400).json({ error: "Title is required" });
-      }
-
-      const counter = await Acounter.findOne({ _id: "books" });
-      if (!counter) throw new Error("Counter not found");
-
-      req.body.bookId = counter.seq + 1;
-      const book = await Book.create(req.body);
-
-      await Acounter.findOneAndUpdate(
-        { _id: "books" },
-        { $inc: { seq: 1 } },
-        { new: true }
+      return ResponseUtils.bulkOperationResult(
+        res,
+        "Creation",
+        createdBooks,
+        errors,
+        201
       );
-
-      return res.status(201).json(book);
+    } else {
+      const validationError = ValidationUtils.validateBookData(req.body);
+      if (validationError) {
+        return ResponseUtils.badRequest(res, validationError);
+      }
+      const book = await BookService.createSingleBook(req.body);
+      ResponseUtils.success(res, book, 201);
     }
   } catch (error: any) {
+    ResponseUtils.recordsError(res, error.code);
     console.error(error);
-    if (error.code === 11000) {
-      return res.status(409).json({ error: "Duplicate record found" });
-    }
-    res.status(500).json({ error: "Internal server error" });
     next(error);
   }
 });
 
 /**
- * PUT edit book(s) - handles both single and bulk updates
+ * PUT edit book(s) for updating
  */
 router.put("/:ids?", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Handle bulk update from body array
-    if (Array.isArray(req.body)) {
-      const updateResults = [];
-      const errors = [];
-      
-      for (const [index, item] of req.body.entries()) {
-        try {
-          if (!item.bookId) {
-            errors.push({ index, error: "bookId is required for update" });
-            continue;
-          }
+    if (ValidationUtils.isBulkOperation(req.body)) {
+      const { updateResults, errors } = await BookService.updateMultipleBooks(req.body);
 
-          if (!item.title) {
-            errors.push({ index, error: "Title is required" });
-            continue;
-          }
-
-          const { bookId, ...updateData } = item;
-          const book = await Book.findOneAndUpdate(
-            { bookId },
-            updateData,
-            { new: true, runValidators: true }
-          );
-
-          if (!book) {
-            errors.push({ index, bookId, error: "Book not found" });
-            continue;
-          }
-
-          updateResults.push(book);
-        } catch (error: any) {
-          errors.push({ 
-            index, 
-            bookId: item.bookId,
-            error: error.code === 11000 ? "Duplicate record" : "Update failed",
-            details: error.message
-          });
-        }
-      }
-
-      return res.json({
-        message: "Bulk update completed",
-        updated: updateResults.length,
-        failed: errors.length,
-        data: updateResults,
-        errors: errors.length > 0 ? errors : undefined
-      });
+      return ResponseUtils.bulkOperationResult(
+        res,
+        "Update",
+        updateResults,
+        errors
+      );
     }
-    
-    // Handle single update from URL parameter
+
     const bookId = req.params.ids ? parseInt(req.params.ids) : req.body.bookId;
-    
-    if (!bookId || isNaN(bookId)) {
-      return res.status(400).json({ error: "Valid bookId is required" });
+    if (!ValidationUtils.isValidBookId(bookId)) {
+      return ResponseUtils.badRequest(res, "Valid bookId is required");
     }
 
     if (!req.body.title) {
-      return res.status(400).json({ error: "Title is required" });
+      return ResponseUtils.badRequest(res, "Title is required");
     }
 
-    const book = await Book.findOneAndUpdate(
-      { bookId },
-      req.body,
-      { new: true, runValidators: true }
-    );
-
+    const book = await BookService.updateBook(bookId, req.body);
     if (!book) {
-      return res.status(404).json({ error: "Book not found" });
+      return ResponseUtils.notFound(res, "Book not found");
     }
-
-    res.status(200).json(book);
+    ResponseUtils.success(res, book);
   } catch (error: any) {
+    ResponseUtils.recordsError(res, error.code);
     console.error(error);
-    if (error.code === 11000) {
-      return res.status(409).json({ error: "Duplicate record found" });
-    }
-    res.status(500).json({ error: "Internal server error" });
     next(error);
   }
 });
 
-/**
- * DELETE book(s) - handles both single and bulk deletion
- */
-router.delete("/:ids?", async (req: Request, res: Response, next: NextFunction) => {
+router.delete("/:bookId", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Handle bulk deletion from body array
-    if (Array.isArray(req.body)) {
-      const deleteResults = [];
-      const errors = [];
-      
-      for (const [index, item] of req.body.entries()) {
-        try {
-          if (!item.bookId) {
-            errors.push({ index, error: "bookId is required for deletion" });
-            continue;
-          }
-
-          const result = await Book.deleteOne({ bookId: item.bookId });
-          
-          if (result.deletedCount === 0) {
-            errors.push({ index, bookId: item.bookId, error: "Book not found" });
-            continue;
-          }
-
-          deleteResults.push({ bookId: item.bookId, deleted: true });
-        } catch (error: any) {
-          errors.push({ 
-            index, 
-            bookId: item.bookId,
-            error: "Deletion failed",
-            details: error.message
-          });
-        }
-      }
-
-      return res.json({
-        message: "Bulk deletion completed",
-        deleted: deleteResults.length,
-        failed: errors.length,
-        data: deleteResults,
-        errors: errors.length > 0 ? errors : undefined
-      });
-    }
-    
-    // Handle single deletion from URL parameter or query string
-    let bookId: number;
-    
-    if (req.params.ids) {
-      bookId = parseInt(req.params.ids);
-    } else if (req.query.bookId) {
-      bookId = parseInt(req.query.bookId as string);
-    } else {
-      return res.status(400).json({ error: "bookId is required" });
+    const bookId = parseInt(req.params.bookId);
+    if (!ValidationUtils.isValidBookId(bookId)) {
+      return ResponseUtils.badRequest(res, "Invalid book ID");
     }
 
-    if (isNaN(bookId)) {
-      return res.status(400).json({ error: "Invalid book ID" });
-    }
-
-    const result = await Book.deleteOne({ bookId });
-
+    const result = await BookService.deleteBook(bookId);
     if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "Book not found" });
+      return ResponseUtils.notFound(res, "Book not found");
     }
 
-    return res.status(200).json({ 
-      message: "Book deleted successfully",
-      bookId 
+    ResponseUtils.success(res, {
+      message: "Book deleted successfully"
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: "Server error" });
+    ResponseUtils.error(res, "Server error");
+    next(error);
   }
 });
 

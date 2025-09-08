@@ -1,8 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { ObjectId } from "mongodb";
 
-import Acounter from "../models/acounter";
-import Draft from "../models/draft";
+import { Acounter, Draft } from "../models";
 
 const router = Router();
 

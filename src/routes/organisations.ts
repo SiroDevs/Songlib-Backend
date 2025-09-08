@@ -1,17 +1,16 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { ObjectId } from "mongodb";
 
-import Acounter from "./models/acounter";
-import Org from "./models/org";
+import { Acounter, Organisation } from "../models";
 
 const router = Router();
 
 /**
- * GET org list
+ * GET organisation list
  */
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await Org.find({});
+    const data = await Organisation.find({});
     res.json(data);
   } catch (error) {
     console.error(error);
@@ -20,15 +19,15 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * GET single org
+ * GET single organisation
  */
 router.get("/:orgid", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const org = await Org.findOne({ orgid: req.params.orgid });
-    if (!org) {
-      return res.status(404).json({ message: "Org not found" });
+    const organisation = await Organisation.findOne({ orgid: req.params.orgid });
+    if (!organisation) {
+      return res.status(404).json({ message: "Organisation not found" });
     }
-    res.status(200).json(org);
+    res.status(200).json(organisation);
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error");
@@ -36,7 +35,7 @@ router.get("/:orgid", async (req: Request, res: Response, next: NextFunction) =>
 });
 
 /**
- * POST new org
+ * POST new organisation
  */
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   if (!req.body.title) {
@@ -49,7 +48,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
     req.body.orgid = counter.seq + 1;
 
-    const data = await Org.create(req.body);
+    const data = await Organisation.create(req.body);
     await Acounter.findOneAndUpdate({ _id: "orgs" }, { $inc: { seq: 1 } });
 
     res.json(data);
@@ -64,7 +63,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * UPDATE org
+ * UPDATE organisation
  */
 router.post("/:orgid", async (req: Request, res: Response, next: NextFunction) => {
   if (!req.body.title) {
@@ -73,7 +72,7 @@ router.post("/:orgid", async (req: Request, res: Response, next: NextFunction) =
 
   try {
     const myquery = { _id: new ObjectId(req.params.orgid) };
-    const result = await Org.updateOne(myquery, req.body);
+    const result = await Organisation.updateOne(myquery, req.body);
     res.json(result);
   } catch (error) {
     console.error(error);
@@ -82,17 +81,17 @@ router.post("/:orgid", async (req: Request, res: Response, next: NextFunction) =
 });
 
 /**
- * DELETE a org
+ * DELETE a organisation
  */
 router.delete("/:orgid", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await Org.deleteOne({ orgid: req.params.orgid });
+    const result = await Organisation.deleteOne({ orgid: req.params.orgid });
 
     if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "Org not found" });
+      return res.status(404).json({ message: "Organisation not found" });
     }
 
-    res.status(200).json({ message: "Org deleted successfully" });
+    res.status(200).json({ message: "Organisation deleted successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error");

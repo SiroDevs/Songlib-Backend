@@ -1,147 +1,123 @@
 import { Router, Request, Response, NextFunction } from "express";
-
-import Acounter from "../models/acounter";
-import Book from "../models/book";
+import { BookService } from "../services/bookService";
+import { ResponseUtils } from "../utils/responseUtils";
+import { ValidationUtils } from "../utils/validationUtils";
 
 const router = Router();
 
-/**
- * GET book list.
- *
- * @return book list | empty.
- */
-router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
+router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await Book.find({}).select("-_id").sort("bookNo");
-    res.json(data);
+    const books = await BookService.getAllBooks();
+    ResponseUtils.success(res, { data: books });
   } catch (error) {
+    ResponseUtils.error(res, "Server error");
     console.error(error);
     next(error);
   }
 });
 
 /**
- * GET single book.
- *
- * @return book details | empty.
+ * GET single book or multiple books by IDs
  */
-router.get("/:bookId", async (req: Request, res: Response, next: NextFunction) => {
+router.get("/:ids", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await Book.findOne({ bookId: req.params.bookId });
-    if (!data) {
-      return res.status(404).json({ message: "Book not found" });
-    }
-    res.status(200).json(data);
+    const bookIds = req.params.ids.split(",");
+    const books = await BookService.getBooksByIds(bookIds);
+    return ResponseUtils.success(res, { data: books });
   } catch (error) {
     console.error(error);
+    const books = await BookService.getAllBooks();
+    ResponseUtils.success(res, { data: books });
     next(error);
   }
 });
 
 /**
- * POST new book.
- *
- * @return book details | empty.
+ * POST new book(s)
  */
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (Array.isArray(req.body)) {
-      const promises = req.body.map(async (item: any) => {
-        if (item.title) {
-          const counter = await Acounter.findOne({ _id: "books" });
-          if (!counter) throw new Error("Counter not found");
+    if (ValidationUtils.isBulkOperation(req.body)) {
+      const { createdBooks, errors } = await BookService.createMultipleBooks(req.body);
 
-          item.bookid = counter.seq + 1;
-
-          await Book.create(item);
-          await Acounter.findOneAndUpdate(
-            { _id: "books" },
-            { $inc: { seq: 1 } },
-            { new: true }
-          );
-        }
-      });
-
-      await Promise.all(promises);
-      return res.json("items created successfully");
+      return ResponseUtils.bulkOperationResult(
+        res,
+        "Creation",
+        createdBooks,
+        errors,
+        201
+      );
     } else {
-      if (req.body.title) {
-        const counter = await Acounter.findOne({ _id: "books" });
-        if (!counter) throw new Error("Counter not found");
-
-        req.body.bookid = counter.seq + 1;
-
-        const data = await Book.create(req.body);
-
-        await Acounter.findOneAndUpdate(
-          { _id: "books" },
-          { $inc: { seq: 1 } },
-          { new: true }
-        );
-
-        return res.json(data);
-      } else {
-        return res.json({
-          error: "An input field is either empty or invalid",
-        });
+      const validationError = ValidationUtils.validateBookData(req.body);
+      if (validationError) {
+        return ResponseUtils.badRequest(res, validationError);
       }
+      const book = await BookService.createSingleBook(req.body);
+      ResponseUtils.success(res, book, 201);
     }
   } catch (error: any) {
+    ResponseUtils.recordsError(res, error.code);
     console.error(error);
-    if (error.code === 11000) {
-      return res.status(409).json({ error: "Duplicate record found" });
-    }
-    res.status(500).json({ error: "Internal server error" });
     next(error);
   }
 });
 
 /**
- * PUT edit book.
- *
- * @return book details | empty.
+ * PUT edit book(s) for updating
  */
-router.put("/:bookid", async (req: Request, res: Response, next: NextFunction) => {
+router.put("/:ids?", async (req: Request, res: Response, next: NextFunction) => {
   try {
+    if (ValidationUtils.isBulkOperation(req.body)) {
+      const { updateResults, errors } = await BookService.updateMultipleBooks(req.body);
+
+      return ResponseUtils.bulkOperationResult(
+        res,
+        "Update",
+        updateResults,
+        errors
+      );
+    }
+
+    const bookId = req.params.ids ? parseInt(req.params.ids) : req.body.bookId;
+    if (!ValidationUtils.isValidBookId(bookId)) {
+      return ResponseUtils.badRequest(res, "Valid bookId is required");
+    }
+
     if (!req.body.title) {
-      return res.status(400).json({ error: "Invalid input field(s)" });
+      return ResponseUtils.badRequest(res, "Title is required");
     }
 
-    const book = await Book.findOneAndUpdate(
-      { bookid: req.params.bookid },
-      req.body,
-      { new: true }
-    );
-
+    const book = await BookService.updateBook(bookId, req.body);
     if (!book) {
-      return res.status(404).json({ error: "Book not found" });
+      return ResponseUtils.notFound(res, "Book not found");
     }
-
-    res.status(200).json(book);
-  } catch (error) {
+    ResponseUtils.success(res, book);
+  } catch (error: any) {
+    ResponseUtils.recordsError(res, error.code);
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
     next(error);
   }
 });
 
-/**
- * DELETE a book.
- *
- * @return delete result | empty.
- */
-router.delete("/:bookid", async (req: Request, res: Response, next: NextFunction) => {
+router.delete("/:bookId", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await Book.deleteOne({ bookid: req.params.bookid });
-
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "Book not found" });
+    const bookId = parseInt(req.params.bookId);
+    if (!ValidationUtils.isValidBookId(bookId)) {
+      return ResponseUtils.badRequest(res, "Invalid book ID");
     }
 
-    return res.status(200).json({ message: "Book deleted successfully" });
+    const result = await BookService.deleteBook(bookId);
+    if (result.deletedCount === 0) {
+      return ResponseUtils.notFound(res, "Book not found");
+    }
+
+    ResponseUtils.success(res, {
+      message: "Book deleted successfully"
+    });
   } catch (error) {
     console.error(error);
-    return res.status(500).send("Server error");
+    ResponseUtils.error(res, "Server error");
+    next(error);
   }
 });
 

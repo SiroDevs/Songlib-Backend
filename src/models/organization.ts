@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IOrg extends Document {
+export interface IOrganisation extends Document {
     orgId: number;
     user: number;
     title: string;
@@ -10,7 +10,7 @@ export interface IOrg extends Document {
     updated?: Date;
 }
 
-const orgSchema = new Schema<IOrg>({
+const organisationSchema = new Schema<IOrganisation>({
     orgId: {
         type: Number,
         unique: true,
@@ -43,5 +43,5 @@ const orgSchema = new Schema<IOrg>({
     }
 });
 
-export const Org = mongoose.model<IOrg>('Org', orgSchema);
-export default Org;
+export const Organisation = mongoose.model<IOrganisation>('Organisation', organisationSchema);
+export default Organisation;

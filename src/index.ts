@@ -37,6 +37,11 @@ app.use("/api/edits", edits);
 app.use("/api/listings", listings);
 app.use("/api/organisations", organisations);
 
-// Start server
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`The SongLib Server is running on port ${PORT}`));
+// Export the app for Vercel
+export default app;
+
+// Start server only in local development
+if (process.env.VERCEL !== "1" && require.main === module) {
+  const PORT = process.env.PORT || 4000;
+  app.listen(PORT, () => console.log(`The SongLib Server is running on port ${PORT}`));
+}

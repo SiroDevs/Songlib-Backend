@@ -1,4 +1,4 @@
-# SongLib Backend
+# SongLib-Backend
 
 This repository contains the backend for the **SongLib** application, a platform that allows users to manage, store, and access their song collections. The backend is deployed at [songlive.vercel.app](https://songlive.vercel.app), providing API endpoints to power the SongLib frontend and handle various operations related to songs.
 
@@ -7,16 +7,17 @@ This repository contains the backend for the **SongLib** application, a platform
 The repository follows a typical Node.js backend structure, with models, routes, and API logic neatly organized into their respective directories.
 
 ```
-SongLibBe/
-├── api/                 # API-related logic and handlers
-├── models/              # Database models for songs, users, etc.
-├── routes/              # Route definitions for API endpoints
-├── services/            # Services for rputes
-├── utils/               # Api Utilities and helpers
-├── index.js             # Main entry point for the server
-├── package.json         # Project dependencies and scripts
-├── .env.example         # Example environment variables file
-└── vercel.json          # Vercel deployment configuration
+SongLib-Backend/
+├── src/
+│   ├── api/         # API-related logic and handlers
+│   ├── models/      # Database models for songs, users, etc.
+│   ├── routes/      # Route definitions for API endpoints
+│   ├── services/    # Business logic and services used by routes
+│   └── utils/       # Utilities and helper functions
+├── index.js         # Main entry point for the server
+├── package.json     # Project dependencies and scripts
+├── .env.example     # Example environment variables file
+└── vercel.json      # Vercel deployment configuration
 ```
 
 ## Getting Started

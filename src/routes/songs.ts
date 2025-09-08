@@ -26,7 +26,7 @@ router.get("/:songId", async (req: Request, res: Response, next: NextFunction) =
 /**
  * GET songs by book ID(s)
  */
-router.get("/book/:bookIds", async (req: Request, res: Response, next: NextFunction) => {
+router.get("/books/:bookIds", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const bookIds = ValidationUtils.parseBookIds(req.params.bookIds);
     if (bookIds.length === 0) {

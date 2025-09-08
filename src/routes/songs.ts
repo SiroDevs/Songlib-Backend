@@ -55,7 +55,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
       return ResponseUtils.bulkOperationResult(
         res,
-        "Creation",
+        "songs saved",
         createdSongs,
         errors,
         201
@@ -76,9 +76,34 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
+ * PUT edit song(s) for updating
+ */
+router.put("/", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (Array.isArray(req.body)) {
+      const { updateResults, errors } = await SongService.updateMultipleSongs(req.body);
+      return ResponseUtils.bulkOperationResult(res, "song updated", updateResults, errors);
+    }
+
+    if (!req.body.songId || !req.body.songNo || !req.body.title) {
+      return ResponseUtils.badRequest(res, "Some song info is missing");
+    }
+    const song = await SongService.updateSong(req.body.songId, req.body);
+    if (!song) {
+      return ResponseUtils.notFound(res, "Song not found");
+    }
+    ResponseUtils.success(res, "Song updated successfully");
+  } catch (error: any) {
+    ResponseUtils.recordsError(res, error.code);
+    console.error(error);
+    next(error);
+  }
+});
+
+/**
  * PUT update single song
  */
-router.put("/:songId", async (req: Request, res: Response, next: NextFunction) => {
+router.put("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const songId = parseInt(req.params.songId);
     if (!req.body.title) {
@@ -97,32 +122,6 @@ router.put("/:songId", async (req: Request, res: Response, next: NextFunction) =
 });
 
 /**
- * PUT bulk update song IDs
- */
-router.put("/bulk/:value", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const valueToAdd = parseInt(req.params.value);
-    const { book } = req.body;
-    if (!book) {
-      return ResponseUtils.badRequest(res, "Book is required");
-    }
-    const result = await SongService.bulkUpdateSongIds(book, valueToAdd);
-
-    if (result.updatedCount === 0) {
-      return ResponseUtils.notFound(res, "No songs found for the specified book");
-    }
-
-    ResponseUtils.success(res, {
-      message: `${result.updatedCount} songs updated successfully`,
-    });
-  } catch (error) {
-    ResponseUtils.error(res, "Server error");
-    console.error(error);
-    next(error);
-  }
-});
-
-/**
  * DELETE single song
  */
 router.delete("/:songId", async (req: Request, res: Response, next: NextFunction) => {
@@ -134,26 +133,6 @@ router.delete("/:songId", async (req: Request, res: Response, next: NextFunction
     }
     ResponseUtils.success(res, {
       message: "Song deleted successfully",
-    });
-  } catch (error) {
-    ResponseUtils.error(res, "Server error");
-    console.error(error);
-    next(error);
-  }
-});
-
-/**
- * DELETE all songs from a book
- */
-router.delete("/bulk/:book", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { book } = req.params;
-    const deletedCount = await SongService.deleteSongsByBook(book);
-    if (deletedCount === 0) {
-      return ResponseUtils.notFound(res, "No songs found for the specified book");
-    }
-    ResponseUtils.success(res, {
-      message: `${deletedCount} songs deleted successfully`,
     });
   } catch (error) {
     ResponseUtils.error(res, "Server error");

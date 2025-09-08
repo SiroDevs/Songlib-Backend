@@ -1,13 +1,12 @@
-import { Router, Request, Response } from "express";
-
-const router = Router();
+const express = require("express");
+const router = express.Router();
 
 /**
  * GET home.
  *
  * @return home page | empty.
  */
-router.get("/", async (_req: Request, res: Response) => {
+router.get("/", async (req, res) => {
   try {
     res.json({
       status: 200,
@@ -19,4 +18,4 @@ router.get("/", async (_req: Request, res: Response) => {
   }
 });
 
-export default router;
+module.exports = router;

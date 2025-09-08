@@ -1,8 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 
-import Acounter from "./models/acounter";
-import Edit from "./models/edit";
+import { Acounter, Edit } from "../models";
 
 const router = express.Router();
 const { ObjectId } = mongoose.Types;

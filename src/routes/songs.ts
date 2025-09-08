@@ -1,20 +1,19 @@
 import { Router, Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 
-import Acounter from "./models/acounter";
-import Org from "./models/org";
+import { Acounter, Song } from "../models";
 
 const router = Router();
 const { ObjectId } = mongoose.Types;
 
 /**
- * GET org list.
+ * GET song list.
  *
- * @return org list | empty.
+ * @return song list | empty.
  */
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await Org.find({});
+    const data = await Song.find({});
     res.json(data);
   } catch (error) {
     console.error(error);
@@ -24,17 +23,17 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * GET single org.
+ * GET single song.
  *
- * @return org details | empty.
+ * @return song details | empty.
  */
-router.get("/:orgid", async (req: Request, res: Response, next: NextFunction) => {
+router.get("/:songid", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const org = await Org.findOne({ orgid: req.params.orgid });
-    if (!org) {
-      return res.status(404).json({ message: "Org not found" });
+    const song = await Song.findOne({ songid: req.params.songid });
+    if (!song) {
+      return res.status(404).json({ message: "Song not found" });
     }
-    res.status(200).json(org);
+    res.status(200).json(song);
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error");
@@ -43,9 +42,9 @@ router.get("/:orgid", async (req: Request, res: Response, next: NextFunction) =>
 });
 
 /**
- * POST new org.
+ * POST new song.
  *
- * @return org details | error.
+ * @return song details | error.
  */
 router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -60,9 +59,9 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
       return res.status(500).json({ error: "Counter not found" });
     }
 
-    req.body.orgid = counter.seq + 1;
+    req.body.songid = counter.seq + 1;
 
-    const newOrg = await Org.create(req.body);
+    const newOrg = await Song.create(req.body);
 
     await Acounter.findOneAndUpdate(
       { _id: "orgs" },
@@ -82,11 +81,11 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * UPDATE org.
+ * UPDATE song.
  *
- * @return updated org | error.
+ * @return updated song | error.
  */
-router.put("/:orgid", async (req: Request, res: Response, next: NextFunction) => {
+router.put("/:songid", async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.body.title) {
       return res.status(400).json({
@@ -94,16 +93,16 @@ router.put("/:orgid", async (req: Request, res: Response, next: NextFunction) =>
       });
     }
 
-    const updated = await Org.updateOne(
-      { _id: new ObjectId(req.params.orgid) },
+    const updated = await Song.updateOne(
+      { _id: new ObjectId(req.params.songid) },
       req.body
     );
 
     if (updated.modifiedCount === 0) {
-      return res.status(404).json({ message: "Org not found" });
+      return res.status(404).json({ message: "Song not found" });
     }
 
-    res.json({ message: "Org updated successfully" });
+    res.json({ message: "Song updated successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error");
@@ -112,17 +111,17 @@ router.put("/:orgid", async (req: Request, res: Response, next: NextFunction) =>
 });
 
 /**
- * DELETE a org.
+ * DELETE a song.
  *
  * @return delete result | error.
  */
-router.delete("/:orgid", async (req: Request, res: Response, next: NextFunction) => {
+router.delete("/:songid", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await Org.deleteOne({ orgid: req.params.orgid });
+    const result = await Song.deleteOne({ songid: req.params.songid });
     if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "Org not found" });
+      return res.status(404).json({ message: "Song not found" });
     }
-    res.status(200).json({ message: "Org deleted successfully" });
+    res.status(200).json({ message: "Song deleted successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error");

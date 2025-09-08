@@ -1,7 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 
-import Acounter from "./models/acounter";
-import Song from "./models/song";
+import { Acounter, Song } from "../models";
 
 const router = Router();
 

@@ -1,7 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 
-import Acounter from "./models/acounter";
-import Listing from "./models/listing";
+import { Acounter, Listing } from "../models";
 
 const router = express.Router();
 

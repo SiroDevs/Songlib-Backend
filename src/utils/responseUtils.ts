@@ -39,12 +39,14 @@ export class ResponseUtils {
     errors: any[],
     statusCode: number = 200
   ) {
+    if (errors.length === 0) {
+      return res.status(statusCode).json(results);
+    }
+
     return res.status(statusCode).json({
-      message: `${operation} completed`,
-      [operation.toLowerCase() + 'ed']: results.length,
-      failed: errors.length,
-      data: results,
-      ...(errors.length > 0 && { errors })
+      message: `${operation} completed with errors`,
+      results,
+      errors
     });
   }
 }

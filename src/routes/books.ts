@@ -8,9 +8,9 @@ const router = Router();
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const books = await BookService.getAllBooks();
-    ResponseUtils.success(res, { data: books });
+    ResponseUtils.success(res, books);
   } catch (error) {
-    ResponseUtils.error(res, "Server error");
+    ResponseUtils.recordsError(res, error);
     console.error(error);
     next(error);
   }
@@ -23,11 +23,10 @@ router.get("/:ids", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const bookIds = req.params.ids.split(",");
     const books = await BookService.getBooksByIds(bookIds);
-    return ResponseUtils.success(res, { data: books });
+    return ResponseUtils.success(res, books);
   } catch (error) {
+    ResponseUtils.recordsError(res, error);
     console.error(error);
-    const books = await BookService.getAllBooks();
-    ResponseUtils.success(res, { data: books });
     next(error);
   }
 });

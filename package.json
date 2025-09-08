@@ -1,7 +1,7 @@
 {
   "name": "songlib-backend",
   "version": "1.0.0",
-  "description": "the back end for songlib",
+  "description": "the back end for the songlib app",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"

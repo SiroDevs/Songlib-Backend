@@ -37,7 +37,7 @@ router.get("/book/:bookIds", async (req: Request, res: Response, next: NextFunct
     if (songs.length === 0) {
       return ResponseUtils.notFound(res, "No songs found for the specified books");
     }
-    ResponseUtils.success(res, { data: songs });
+    ResponseUtils.success(res, songs);
   } catch (error) {
     ResponseUtils.error(res, "Server error");
     console.error(error);

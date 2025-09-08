@@ -3,11 +3,12 @@
   "description": "the back end for songlib",
   "author": "Dev Siro",
   "version": "1.0.5",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "vercel-build": "npm run build"
   },
   "keywords": [
     "typescript",

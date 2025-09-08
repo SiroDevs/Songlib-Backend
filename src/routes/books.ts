@@ -41,7 +41,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 
       return ResponseUtils.bulkOperationResult(
         res,
-        "Creation",
+        "books saved",
         createdBooks,
         errors,
         201
@@ -64,33 +64,21 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
 /**
  * PUT edit book(s) for updating
  */
-router.put("/:ids?", async (req: Request, res: Response, next: NextFunction) => {
+router.put("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (ValidationUtils.isBulkOperation(req.body)) {
+    if (Array.isArray(req.body)) {
       const { updateResults, errors } = await BookService.updateMultipleBooks(req.body);
-
-      return ResponseUtils.bulkOperationResult(
-        res,
-        "Update",
-        updateResults,
-        errors
-      );
+      return ResponseUtils.bulkOperationResult(res, "books updated", updateResults, errors);
     }
 
-    const bookId = req.params.ids ? parseInt(req.params.ids) : req.body.bookId;
-    if (!ValidationUtils.isValidBookId(bookId)) {
-      return ResponseUtils.badRequest(res, "Valid bookId is required");
+    if (!req.body.bookId || !req.body.title) {
+      return ResponseUtils.badRequest(res, "Some book info is missing");
     }
-
-    if (!req.body.title) {
-      return ResponseUtils.badRequest(res, "Title is required");
-    }
-
-    const book = await BookService.updateBook(bookId, req.body);
+    const book = await BookService.updateBook(req.body.bookId, req.body);
     if (!book) {
       return ResponseUtils.notFound(res, "Book not found");
     }
-    ResponseUtils.success(res, book);
+    ResponseUtils.success(res, "Book updated successfully");
   } catch (error: any) {
     ResponseUtils.recordsError(res, error.code);
     console.error(error);

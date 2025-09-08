@@ -43,8 +43,8 @@ export class SongService {
 
     for (const [index, item] of songsData.entries()) {
       try {
-        if (!item.title) {
-          errors.push({ index, error: "Title is required" });
+        if (!item.songNo || !item.title) {
+          errors.push({ index, error: "Some song info is missing" });
           continue;
         }
 
@@ -115,28 +115,6 @@ export class SongService {
   }
 
   /**
-   * Bulk update songs by adding value to songId
-   */
-  static async bulkUpdateSongIds(book: string, valueToAdd: number) {
-    const songs = await Song.find({ book });
-    
-    if (songs.length === 0) {
-      return { updatedCount: 0, songs: [] };
-    }
-
-    const updatePromises = songs.map(async (song) => {
-      return await Song.findOneAndUpdate(
-        { _id: song._id },
-        { $set: { songId: song.songId + valueToAdd } },
-        { new: true }
-      );
-    });
-
-    const updatedSongs = await Promise.all(updatePromises);
-    return { updatedCount: updatedSongs.length, songs: updatedSongs };
-  }
-
-  /**
    * Delete a single song
    */
   static async deleteSong(songId: number) {
@@ -171,10 +149,5 @@ export class SongService {
     }
 
     return { deleteResults, errors };
-  }
-
-  static async deleteSongsByBook(book: string) {
-    const result = await Song.deleteMany({ book });
-    return result.deletedCount;
   }
 }

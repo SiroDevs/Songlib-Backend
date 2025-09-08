@@ -40,7 +40,11 @@ export class ResponseUtils {
     statusCode: number = 200
   ) {
     if (errors.length === 0) {
-      return res.status(statusCode).json(results);
+      return res.status(statusCode).json(
+        {
+          message: `${results.length} ${operation} successfully!`
+        }
+      );
     }
 
     return res.status(statusCode).json({

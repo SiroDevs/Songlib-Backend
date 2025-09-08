@@ -9,7 +9,15 @@
     "dev": "ts-node src/index.ts",
     "build": "tsc"
   },
-  "keywords": [],
+  "keywords": [
+    "typescript",
+    "expressjs",
+    "songlib",
+    "vercel",
+    "vercel-deployment",
+    "expressjs-vercel",
+    "expressjs-deployment"
+  ],
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",

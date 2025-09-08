@@ -1,9 +1,8 @@
 {
   "name": "songlib-backend",
+  "version": "1.0.0",
   "description": "the back end for songlib",
-  "author": "Dev Siro",
-  "version": "1.0.5",
-  "main": "src/index.ts",
+  "main": "index.js",
   "scripts": {
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
@@ -11,6 +10,7 @@
     "vercel-build": "npm run build"
   },
   "keywords": [],
+  "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
@@ -20,17 +20,5 @@
     "nanoid": "^4.0.2",
     "nodemon": "^2.0.22",
     "swagger-ui-express": "^4.6.2"
-  },
-  "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
-    "@types/mongoose": "^5.11.96",
-    "@types/node": "^24.3.0",
-    "@types/swagger-ui-express": "^4.1.8",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
-  },
-  "engines": {
-    "node": "22.x"
   }
 }

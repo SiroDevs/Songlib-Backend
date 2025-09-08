@@ -173,9 +173,6 @@ export class SongService {
     return { deleteResults, errors };
   }
 
-  /**
-   * Delete all songs from a book
-   */
   static async deleteSongsByBook(book: string) {
     const result = await Song.deleteMany({ book });
     return result.deletedCount;

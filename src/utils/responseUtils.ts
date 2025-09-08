@@ -7,21 +7,22 @@ export class ResponseUtils {
 
   static error(res: Response, message: string, statusCode: number = 500, details?: any) {
     return res.status(statusCode).json({
+      status: statusCode,
       error: message,
       ...(details && { details })
     });
   }
 
   static notFound(res: Response, message: string = "Resource not found") {
-    return res.status(404).json({ error: message });
+    return res.status(404).json({ status: 404, error: message });
   }
 
   static badRequest(res: Response, message: string = "Bad request") {
-    return res.status(400).json({ error: message });
+    return res.status(400).json({ status: 400, error: message });
   }
 
   static conflict(res: Response, message: string = "Conflict") {
-    return res.status(409).json({ error: message });
+    return res.status(409).json({ status: 409, error: message });
   }
 
   static recordsError(res: Response, error: any) {
@@ -42,12 +43,14 @@ export class ResponseUtils {
     if (errors.length === 0) {
       return res.status(statusCode).json(
         {
+          status: statusCode,
           message: `${results.length} ${operation} successfully!`
         }
       );
     }
 
     return res.status(statusCode).json({
+      status: statusCode,
       message: `${operation} completed with errors`,
       results,
       errors

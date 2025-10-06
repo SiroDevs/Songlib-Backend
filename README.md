@@ -38,14 +38,14 @@ Copy the `.env.example` file to `.env` and update the values:
 cp .env.example .env
 ```
 
-### Setting Up SongLibBe:
+### Setting Up SongLib-Backend:
 
 To get started with this project, you'll need Node.js installed. You can clone the repository and install the necessary dependencies by following these steps:
 
 1. **Clone the Repository:** Clone SongLib repository from GitHub using Git:
 
     ```bash
-    git clone git@github.com:SiroDaves/SonglibBe.git
+    git clone git@github.com:SiroDevs/SongLib-Backend.git
  
 2. **Install Packages:** Navigate to the project directory and run:
 
@@ -53,7 +53,7 @@ To get started with this project, you'll need Node.js installed. You can clone t
     npm install
     ```
 
-### Running SongLib:
+### Running SongLib-Backend:
 Once the dependencies are installed and environment variables are set up, you can run the backend locally using:
 
 ```bash

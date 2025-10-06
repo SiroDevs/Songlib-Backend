@@ -3,7 +3,7 @@ import { CounterService } from "./counterService";
 
 export class BookService {
   static async getAllBooks() {
-    return await Book.find({}).select("-_id").sort("bookNo");
+    return await Book.find({ enabled: true }).select("-_id").sort("bookNo");
   }
 
   static async getBooksByIds(bookIds: string[]) {

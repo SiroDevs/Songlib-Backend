@@ -3,9 +3,6 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
-// v1 routes (unchanged)
-import { home, users, books, songs, drafts, edits, listings, organisations } from './routes';
-
 // v2 swagger docs
 import swaggerRouter from './v2/swagger';
 
@@ -48,18 +45,8 @@ mongoose
 
 app.use(express.json({ limit: '50mb' }));
 
-// ── v1 routes
-app.use('/api/users', users);
-app.use('/api/books', books);
-app.use('/api/songs', songs);
-app.use('/api/drafts', drafts);
-app.use('/api/edits', edits);
-app.use('/api/listings', listings);
-app.use('/api/organisations', organisations);
-
 // ── v2 routes 
-app.use('/', swaggerRouter);
-app.use('/api', swaggerRouter);
+app.use('/api/v2', swaggerRouter);
 app.use('/api/v2/health', health);
 app.use('/api/v2/books', booksV2);
 app.use('/api/v2/songs', songsV2);

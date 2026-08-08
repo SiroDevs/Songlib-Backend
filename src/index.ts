@@ -3,9 +3,6 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
-// v1 routes (unchanged)
-import { home, users, books, songs, drafts, edits, listings, organisations } from './routes';
-
 // v2 swagger docs
 import swaggerRouter from './v2/swagger';
 
@@ -28,6 +25,12 @@ if (process.env.NODE_ENV !== 'production') {
 
 const app = express();
 
+// Required when running behind a reverse proxy (Vercel, Render, etc.).
+// Without this, express-rate-limit throws on every request because it
+// can't safely trust the X-Forwarded-For header, which was surfacing
+// as a 500 on every rate-limited route (i.e. almost all of them).
+app.set('trust proxy', 1);
+
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
   : ['*'];
@@ -48,18 +51,8 @@ mongoose
 
 app.use(express.json({ limit: '50mb' }));
 
-// ── v1 routes
-app.use('/api/users', users);
-app.use('/api/books', books);
-app.use('/api/songs', songs);
-app.use('/api/drafts', drafts);
-app.use('/api/edits', edits);
-app.use('/api/listings', listings);
-app.use('/api/organisations', organisations);
-
 // ── v2 routes 
-app.use('/', swaggerRouter);
-app.use('/api', swaggerRouter);
+app.use('/api/v2', swaggerRouter);
 app.use('/api/v2/health', health);
 app.use('/api/v2/books', booksV2);
 app.use('/api/v2/songs', songsV2);

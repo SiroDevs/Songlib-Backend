@@ -33,8 +33,17 @@ export class ResponseUtils {
     return res.status(401).json({ status: 401, error: message });
   }
 
-  static conflict(res: Response, message = 'Conflict') {
-    return res.status(409).json({ status: 409, error: message });
+  // `existing`, when provided, is spread at the top level (not nested)
+  // so clients that parse the 409 body directly as the resource shape
+  // (e.g. the Android app recovering a user's id after a duplicate
+  // registration attempt) can do so without any special-casing.
+  static conflict(res: Response, message = 'Conflict', existing?: any) {
+    const existingFields = existing?.toObject ? existing.toObject() : existing;
+    return res.status(409).json({
+      status: 409,
+      error: message,
+      ...(existingFields && existingFields),
+    });
   }
 
   static bulkResult(

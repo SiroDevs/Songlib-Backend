@@ -2,12 +2,15 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IUser extends Document {
     userId: number;
-    fullname: string;
-    username: string;
-    email: string;
-    phone: string;
-    bio: string;
     role: 'user' | 'admin';
+    username: string;
+    googleId: string;
+    email: string;
+    name: string;
+    phone: string;
+    photoUrl: string;
+    bio: string;
+    selectedBooks: string;
     lastseen: Date;
     created: Date;
     updated?: Date;
@@ -19,10 +22,11 @@ const userSchema = new Schema<IUser>({
         unique: true,
         index: true
     },
-    fullname: {
+    role: {
         type: String,
-        trim: true,
-        maxlength: [100, 'Name cannot exceed 100 characters']
+        enum: ['user', 'admin'],
+        default: 'user',
+        index: true
     },
     username: {
         type: String,
@@ -30,26 +34,42 @@ const userSchema = new Schema<IUser>({
         trim: true,
         maxlength: [100, 'Username cannot exceed 50 characters']
     },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true,
+        trim: true,
+        maxlength: [100, 'googleId cannot exceed 50 characters']
+    },
     email: {
         type: String,
         unique: true,
+        sparse: true,
+        trim: true,
+        maxlength: [100, 'Name cannot exceed 100 characters']
+    },
+    name: {
+        type: String,
         trim: true,
         maxlength: [100, 'Name cannot exceed 100 characters']
     },
     phone: {
         type: String,
         unique: true,
+        sparse: true,
+        trim: true,
+    },
+    photoUrl: {
+        type: String,
         trim: true,
     },
     bio: {
         type: String,
         trim: true,
     },
-    role: {
+    selectedBooks: {
         type: String,
-        enum: ['user', 'admin'],
-        default: 'user',
-        index: true
+        trim: true,
     },
     lastseen: {
         type: Date,

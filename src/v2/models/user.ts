@@ -37,7 +37,7 @@ const userSchema = new Schema<IUser>({
     googleId: {
         type: String,
         unique: true,
-        sparse: true, // avoid colliding on "missing" for non-Google logins
+        sparse: true,
         trim: true,
         maxlength: [100, 'googleId cannot exceed 50 characters']
     },
@@ -56,7 +56,7 @@ const userSchema = new Schema<IUser>({
     phone: {
         type: String,
         unique: true,
-        sparse: true, // avoid colliding on "missing" when phone isn't set
+        sparse: true,
         trim: true,
     },
     photoUrl: {

@@ -25,6 +25,12 @@ if (process.env.NODE_ENV !== 'production') {
 
 const app = express();
 
+// Required when running behind a reverse proxy (Vercel, Render, etc.).
+// Without this, express-rate-limit throws on every request because it
+// can't safely trust the X-Forwarded-For header, which was surfacing
+// as a 500 on every rate-limited route (i.e. almost all of them).
+app.set('trust proxy', 1);
+
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
   : ['*'];
